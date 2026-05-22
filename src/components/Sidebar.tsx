@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CATALOG, CATEGORY_ORDER } from '../data/catalog';
 import { formatUsd } from '../lib/calculations';
+import { Illustration } from '../data/illustrations';
 import type { ComponentSpec } from '../types';
 
 function PaletteItem({ spec }: { spec: ComponentSpec }) {
@@ -10,7 +11,7 @@ function PaletteItem({ spec }: { spec: ComponentSpec }) {
   };
 
   const summary = (() => {
-    if (spec.role === 'storage') return `${spec.capacityAh}Ah / ${spec.capacityWh}Wh`;
+    if (spec.role === 'storage') return `${spec.capacityAh}Ah / ${(spec.capacityWh ?? 0) / 1000}kWh`;
     if (spec.category === 'solar') return `${spec.ratedWatts}W`;
     if (spec.category === 'alternator' || spec.category === 'charge-controller')
       return spec.outputAmps ? `${spec.outputAmps}A` : `${spec.outputWatts}W`;
@@ -19,6 +20,8 @@ function PaletteItem({ spec }: { spec: ComponentSpec }) {
     return '';
   })();
 
+  const voltageBadge = spec.systemVoltage ? `${spec.systemVoltage}V` : spec.outputVoltage ? `${spec.outputVoltage}V` : null;
+
   return (
     <div
       className="palette-item"
@@ -26,13 +29,14 @@ function PaletteItem({ spec }: { spec: ComponentSpec }) {
       onDragStart={onDragStart}
       title={spec.notes ?? spec.name}
     >
-      <div className="palette-item__icon" aria-hidden>
-        {spec.icon}
+      <div className="palette-item__thumb">
+        <Illustration spec={spec} size={36} />
       </div>
       <div className="palette-item__body">
         <div className="palette-item__name">{spec.name}</div>
         <div className="palette-item__meta">
           {summary && <span className="palette-item__summary">{summary}</span>}
+          {voltageBadge && <span className={`palette-item__v palette-item__v--${spec.currentType.toLowerCase()}`}>{voltageBadge}</span>}
           {spec.price > 0 && <span className="palette-item__price">{formatUsd(spec.price)}</span>}
         </div>
       </div>
@@ -42,17 +46,26 @@ function PaletteItem({ spec }: { spec: ComponentSpec }) {
 
 export default function Sidebar() {
   const [query, setQuery] = useState('');
+  const [voltageFilter, setVoltageFilter] = useState<'all' | '12' | '24' | '48'>('all');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return CATALOG;
-    return CATALOG.filter(
-      (c) =>
+    return CATALOG.filter((c) => {
+      if (voltageFilter !== 'all') {
+        const v = c.systemVoltage ?? c.outputVoltage;
+        if (v !== parseInt(voltageFilter, 10)) {
+          // Allow universal components (no specific voltage) through always
+          if (v) return false;
+        }
+      }
+      if (!q) return true;
+      return (
         c.name.toLowerCase().includes(q) ||
         c.category.toLowerCase().includes(q) ||
-        (c.notes ?? '').toLowerCase().includes(q),
-    );
-  }, [query]);
+        (c.notes ?? '').toLowerCase().includes(q)
+      );
+    });
+  }, [query, voltageFilter]);
 
   return (
     <aside className="sidebar">
@@ -67,6 +80,18 @@ export default function Sidebar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+      </div>
+      <div className="sidebar__filter">
+        {(['all', '12', '24', '48'] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            className={`filter-chip ${voltageFilter === v ? 'filter-chip--on' : ''}`}
+            onClick={() => setVoltageFilter(v)}
+          >
+            {v === 'all' ? 'All' : `${v}V`}
+          </button>
+        ))}
       </div>
       <div className="sidebar__hint">Drag components onto the canvas.</div>
       <div className="sidebar__categories">

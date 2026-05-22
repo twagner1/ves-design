@@ -37,8 +37,6 @@ function SliderRow({ label, help, value, min, max, step, suffix, onChange }: Sli
 export default function Parameters() {
   const params = useDiagramStore((s) => s.params);
   const setParams = useDiagramStore((s) => s.setParams);
-  const clearDiagram = useDiagramStore((s) => s.clearDiagram);
-  const loadStarter = useDiagramStore((s) => s.loadStarter);
 
   return (
     <section className="panel">
@@ -48,7 +46,7 @@ export default function Parameters() {
       <div className="panel__body">
         <SliderRow
           label="Sunlight"
-          help="Effective peak-sun hours your panels collect on an average day. 5h is typical for the western US in spring."
+          help="Effective peak-sun hours your panels collect on an average day."
           value={params.sunlightHoursPerDay}
           min={0}
           max={10}
@@ -78,7 +76,7 @@ export default function Parameters() {
         />
         <SliderRow
           label="Solar Derating"
-          help="Real-world solar output as a fraction of nameplate (shading, angle, heat, controller). 0.75 is typical."
+          help="Real-world solar output as a fraction of nameplate (shading, angle, heat). 0.75 is typical."
           value={params.solarDerating}
           min={0.4}
           max={1}
@@ -87,14 +85,6 @@ export default function Parameters() {
           onChange={(v) => setParams({ solarDerating: v })}
         />
       </div>
-      <footer className="panel__footer">
-        <button type="button" className="btn btn--ghost" onClick={loadStarter}>
-          Load Starter Build
-        </button>
-        <button type="button" className="btn btn--danger" onClick={clearDiagram}>
-          Clear Diagram
-        </button>
-      </footer>
     </section>
   );
 }

@@ -21,6 +21,8 @@ export type ComponentRole =
   | 'distribution'
   | 'load';
 
+export type CurrentType = 'DC' | 'AC' | 'either';
+
 export interface ComponentSpec {
   id: string;
   name: string;
@@ -28,7 +30,9 @@ export interface ComponentSpec {
   role: ComponentRole;
   icon: string;
 
-  voltage?: number;
+  currentType: CurrentType;
+  systemVoltage?: 12 | 24 | 48 | 120 | 240;
+  outputVoltage?: 12 | 24 | 48 | 120 | 240;
 
   capacityAh?: number;
   capacityWh?: number;
@@ -51,6 +55,8 @@ export interface DiagramNodeData {
   label: string;
   quantity: number;
   hoursPerDay?: number;
+  seriesCount?: number;
+  parallelCount?: number;
 }
 
 export interface GlobalParameters {
@@ -58,5 +64,16 @@ export interface GlobalParameters {
   shorePowerHoursPerDay: number;
   drivingHoursPerDay: number;
   solarDerating: number;
-  systemVoltage: number;
+  systemVoltage: 12 | 24 | 48;
+  simulationDays: number;
+  startingSocPct: number;
+}
+
+export interface SavedDesign {
+  id: string;
+  name: string;
+  savedAt: string;
+  nodes: unknown;
+  edges: unknown;
+  params: GlobalParameters;
 }

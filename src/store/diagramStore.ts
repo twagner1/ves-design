@@ -9,8 +9,9 @@ import {
   type Node,
   type NodeChange,
 } from 'reactflow';
-import type { DiagramNodeData, GlobalParameters } from '../types';
+import type { DiagramNodeData, GlobalParameters, SavedDesign } from '../types';
 import { CATALOG_BY_ID } from '../data/catalog';
+import { PRESETS } from '../data/presets';
 
 interface DiagramState {
   nodes: Node<DiagramNodeData>[];
@@ -25,98 +26,26 @@ interface DiagramState {
   addNodeFromSpec: (specId: string, position: { x: number; y: number }) => void;
   removeNode: (nodeId: string) => void;
   updateNodeData: (nodeId: string, patch: Partial<DiagramNodeData>) => void;
+  expandGroup: (nodeId: string) => void;
   selectNode: (nodeId: string | null) => void;
   clearDiagram: () => void;
 
   setParams: (patch: Partial<GlobalParameters>) => void;
-  loadStarter: () => void;
+  loadPreset: (presetId: string) => void;
+  loadSnapshot: (design: SavedDesign) => void;
 }
-
-const DEFAULT_PARAMS: GlobalParameters = {
-  sunlightHoursPerDay: 5,
-  shorePowerHoursPerDay: 0,
-  drivingHoursPerDay: 1,
-  solarDerating: 0.75,
-  systemVoltage: 12,
-};
 
 function nextId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-const STARTER_NODES: Node<DiagramNodeData>[] = [
-  {
-    id: 'starter-solar',
-    type: 'vesNode',
-    position: { x: 40, y: 40 },
-    data: { specId: 'solar-200w', label: '200W Rigid Solar Panel', quantity: 2 },
-  },
-  {
-    id: 'starter-alt',
-    type: 'vesNode',
-    position: { x: 40, y: 200 },
-    data: { specId: 'victron-orion-30a', label: 'Victron Orion-Tr Smart 12/12-30A', quantity: 1 },
-  },
-  {
-    id: 'starter-mppt',
-    type: 'vesNode',
-    position: { x: 320, y: 40 },
-    data: { specId: 'victron-100-30', label: 'Victron MPPT 100/30', quantity: 1 },
-  },
-  {
-    id: 'starter-battery',
-    type: 'vesNode',
-    position: { x: 320, y: 220 },
-    data: { specId: 'bb-100ah', label: 'Battle Born 100Ah LiFePO4', quantity: 2 },
-  },
-  {
-    id: 'starter-inverter',
-    type: 'vesNode',
-    position: { x: 600, y: 220 },
-    data: { specId: 'victron-multiplus-2000', label: 'Victron MultiPlus 12/2000', quantity: 1 },
-  },
-  {
-    id: 'starter-fridge',
-    type: 'vesNode',
-    position: { x: 880, y: 40 },
-    data: { specId: 'fridge-isotherm-85', label: 'Isotherm CR85 Fridge', quantity: 1 },
-  },
-  {
-    id: 'starter-fan',
-    type: 'vesNode',
-    position: { x: 880, y: 160 },
-    data: { specId: 'maxxair-7500', label: 'MaxxAir Deluxe 7500K Fan', quantity: 1 },
-  },
-  {
-    id: 'starter-lights',
-    type: 'vesNode',
-    position: { x: 880, y: 280 },
-    data: { specId: 'light-puck', label: 'LED Puck Light', quantity: 8 },
-  },
-  {
-    id: 'starter-laptop',
-    type: 'vesNode',
-    position: { x: 880, y: 400 },
-    data: { specId: 'laptop-charging', label: 'Laptop Charging (USB-C PD)', quantity: 1 },
-  },
-];
-
-const STARTER_EDGES: Edge[] = [
-  { id: 'e1', source: 'starter-solar', target: 'starter-mppt' },
-  { id: 'e2', source: 'starter-mppt', target: 'starter-battery' },
-  { id: 'e3', source: 'starter-alt', target: 'starter-battery' },
-  { id: 'e4', source: 'starter-battery', target: 'starter-inverter' },
-  { id: 'e5', source: 'starter-battery', target: 'starter-fridge' },
-  { id: 'e6', source: 'starter-battery', target: 'starter-fan' },
-  { id: 'e7', source: 'starter-battery', target: 'starter-lights' },
-  { id: 'e8', source: 'starter-inverter', target: 'starter-laptop' },
-];
+const STARTER = PRESETS[1]; // Overlanding
 
 export const useDiagramStore = create<DiagramState>((set, get) => ({
-  nodes: STARTER_NODES,
-  edges: STARTER_EDGES,
+  nodes: STARTER.nodes.map((n) => ({ ...n, data: { ...n.data } })),
+  edges: STARTER.edges.map((e) => ({ ...e })),
   selectedNodeId: null,
-  params: DEFAULT_PARAMS,
+  params: { ...STARTER.params },
 
   onNodesChange: (changes) => {
     set({ nodes: applyNodeChanges(changes, get().nodes) });
@@ -131,6 +60,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   addNodeFromSpec: (specId, position) => {
     const spec = CATALOG_BY_ID[specId];
     if (!spec) return;
+    const isBattery = spec.role === 'storage';
     const newNode: Node<DiagramNodeData> = {
       id: nextId(specId),
       type: 'vesNode',
@@ -140,10 +70,13 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
         label: spec.name,
         quantity: 1,
         hoursPerDay: spec.defaultHoursPerDay,
+        seriesCount: isBattery ? 1 : undefined,
+        parallelCount: isBattery ? 1 : undefined,
       },
     };
     set({ nodes: [...get().nodes, newNode] });
   },
+
   removeNode: (nodeId) => {
     set({
       nodes: get().nodes.filter((n) => n.id !== nodeId),
@@ -151,6 +84,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       selectedNodeId: get().selectedNodeId === nodeId ? null : get().selectedNodeId,
     });
   },
+
   updateNodeData: (nodeId, patch) => {
     set({
       nodes: get().nodes.map((n) =>
@@ -158,10 +92,60 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       ),
     });
   },
+
+  expandGroup: (nodeId) => {
+    const state = get();
+    const node = state.nodes.find((n) => n.id === nodeId);
+    if (!node || node.data.quantity <= 1) return;
+    const qty = node.data.quantity;
+    const replacements: Node<DiagramNodeData>[] = [];
+    for (let i = 0; i < qty; i++) {
+      replacements.push({
+        ...node,
+        id: nextId(node.data.specId),
+        position: {
+          x: node.position.x + (i % 3) * 60,
+          y: node.position.y + Math.floor(i / 3) * 50,
+        },
+        data: { ...node.data, quantity: 1 },
+      });
+    }
+    const firstId = replacements[0].id;
+    // Reroute existing edges to/from the original to the first replacement.
+    const newEdges = state.edges.map((e) => {
+      if (e.source === nodeId) return { ...e, source: firstId };
+      if (e.target === nodeId) return { ...e, target: firstId };
+      return e;
+    });
+    set({
+      nodes: [...state.nodes.filter((n) => n.id !== nodeId), ...replacements],
+      edges: newEdges,
+      selectedNodeId: firstId,
+    });
+  },
+
   selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
   clearDiagram: () => set({ nodes: [], edges: [], selectedNodeId: null }),
 
   setParams: (patch) => set({ params: { ...get().params, ...patch } }),
-  loadStarter: () =>
-    set({ nodes: STARTER_NODES, edges: STARTER_EDGES, selectedNodeId: null }),
+
+  loadPreset: (presetId) => {
+    const preset = PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    set({
+      nodes: preset.nodes.map((n) => ({ ...n, data: { ...n.data } })),
+      edges: preset.edges.map((e) => ({ ...e })),
+      params: { ...preset.params },
+      selectedNodeId: null,
+    });
+  },
+
+  loadSnapshot: (design) => {
+    set({
+      nodes: design.nodes as Node<DiagramNodeData>[],
+      edges: design.edges as Edge[],
+      params: design.params,
+      selectedNodeId: null,
+    });
+  },
 }));

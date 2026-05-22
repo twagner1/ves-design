@@ -33,16 +33,12 @@ function Bar({ value, max, color }: { value: number; max: number; color: string 
 
 export default function LiveStats() {
   const nodes = useDiagramStore((s) => s.nodes);
+  const edges = useDiagramStore((s) => s.edges);
   const params = useDiagramStore((s) => s.params);
 
-  const calc = useMemo(() => calculate(nodes, params), [nodes, params]);
+  const calc = useMemo(() => calculate(nodes, edges, params), [nodes, edges, params]);
 
-  const generationMax = Math.max(
-    calc.totalGenerationWh,
-    calc.dailyConsumptionWh,
-    1,
-  );
-
+  const generationMax = Math.max(calc.totalGenerationWh, calc.dailyConsumptionWh, 1);
   const netTone: 'good' | 'bad' | 'info' =
     calc.dailyConsumptionWh === 0 ? 'info' : calc.netDailyWh >= 0 ? 'good' : 'bad';
 
@@ -50,6 +46,7 @@ export default function LiveStats() {
     <section className="panel">
       <header className="panel__header">
         <h2>Live Energy Balance</h2>
+        <span className="panel__busv">{calc.busVoltage}V bus</span>
       </header>
       <div className="panel__body">
         <div className="stat-grid">
@@ -62,7 +59,7 @@ export default function LiveStats() {
           <Stat
             label="Daily consumption"
             value={formatWh(calc.dailyConsumptionWh)}
-            sub={`Peak AC ${formatW(calc.peakAcLoadW)}`}
+            sub={`DC ${formatWh(calc.dcConsumptionWh)} · AC ${formatWh(calc.acConsumptionWh)}`}
             tone="warn"
           />
           <Stat
@@ -135,6 +132,7 @@ export default function LiveStats() {
                 <tr>
                   <th>Load</th>
                   <th className="num">Qty</th>
+                  <th>Type</th>
                   <th className="num">Wh/day</th>
                 </tr>
               </thead>
@@ -143,6 +141,11 @@ export default function LiveStats() {
                   <tr key={l.label}>
                     <td>{l.label}</td>
                     <td className="num">{l.qty}</td>
+                    <td>
+                      <span className={`pill pill--${l.currentType.toLowerCase()}`}>
+                        {l.currentType}
+                      </span>
+                    </td>
                     <td className="num">{formatWh(l.wattHours)}</td>
                   </tr>
                 ))}
@@ -151,6 +154,13 @@ export default function LiveStats() {
           </div>
         )}
 
+        {calc.errors.length > 0 && (
+          <ul className="errors">
+            {calc.errors.map((e) => (
+              <li key={e}>✕ {e}</li>
+            ))}
+          </ul>
+        )}
         {calc.warnings.length > 0 && (
           <ul className="warnings">
             {calc.warnings.map((w) => (

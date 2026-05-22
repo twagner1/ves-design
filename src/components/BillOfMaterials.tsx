@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useDiagramStore } from '../store/diagramStore';
 import { buildBom, formatUsd } from '../lib/calculations';
+import { bomToCsv, downloadCsv } from '../lib/csv';
 
 const CATEGORY_LABELS: Record<string, string> = {
   battery: 'Batteries',
@@ -32,11 +33,28 @@ export default function BillOfMaterials() {
     return out;
   }, [bom]);
 
+  const handleExport = () => {
+    const csv = bomToCsv(bom);
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    downloadCsv(`ves-bom-${ts}.csv`, csv);
+  };
+
   return (
     <section className="panel">
       <header className="panel__header">
         <h2>Bill of Materials</h2>
-        <span className="panel__total">{formatUsd(bom.total)}</span>
+        <div className="panel__header-right">
+          <span className="panel__total">{formatUsd(bom.total)}</span>
+          <button
+            type="button"
+            className="btn btn--sm"
+            onClick={handleExport}
+            disabled={bom.lines.length === 0}
+            title="Export to CSV"
+          >
+            Export CSV
+          </button>
+        </div>
       </header>
       <div className="panel__body">
         {bom.lines.length === 0 ? (
