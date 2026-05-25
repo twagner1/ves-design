@@ -6,6 +6,7 @@ export type ComponentCategory =
   | 'inverter'
   | 'charge-controller'
   | 'shore-power'
+  | 'busbar'
   | 'outlet'
   | 'light'
   | 'appliance'
@@ -57,6 +58,11 @@ export interface DiagramNodeData {
   hoursPerDay?: number;
   seriesCount?: number;
   parallelCount?: number;
+}
+
+export interface WireEdgeData {
+  gauge?: string;
+  lengthFt?: number;
 }
 
 export interface GlobalParameters {

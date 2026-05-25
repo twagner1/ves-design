@@ -78,6 +78,16 @@ input[type='range'] {
   accent-color: var(--accent);
 }
 
+select {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+select:focus { border-color: var(--accent); }
+
 .btn {
   border: 1px solid var(--border-strong);
   background: var(--bg-elev-2);

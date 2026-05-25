@@ -143,6 +143,26 @@ export function ShoreIllustration(p: IllustrationProps) {
   );
 }
 
+export function BusbarIllustration(p: IllustrationProps) {
+  return (
+    <S {...p}>
+      <rect x="6" y="26" width="52" height="12" rx="2" fill="#0f172a" stroke="#ef4444" strokeWidth="2" />
+      <g fill="#ef4444">
+        <circle cx="14" cy="32" r="3" />
+        <circle cx="26" cy="32" r="3" />
+        <circle cx="38" cy="32" r="3" />
+        <circle cx="50" cy="32" r="3" />
+      </g>
+      <g stroke="#64748b" strokeWidth="2" strokeLinecap="round">
+        <line x1="14" y1="26" x2="14" y2="16" />
+        <line x1="26" y1="38" x2="26" y2="48" />
+        <line x1="38" y1="26" x2="38" y2="16" />
+        <line x1="50" y1="38" x2="50" y2="48" />
+      </g>
+    </S>
+  );
+}
+
 export function OutletIllustration(p: IllustrationProps) {
   return (
     <S {...p}>
@@ -251,6 +271,7 @@ const CATEGORY_RENDERERS: Record<
   inverter: InverterIllustration,
   converter: ConverterIllustration,
   'shore-power': ShoreIllustration,
+  busbar: BusbarIllustration,
   outlet: OutletIllustration,
   light: LightIllustration,
   fan: FanIllustration,

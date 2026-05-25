@@ -9,14 +9,17 @@ import {
   type Node,
   type NodeChange,
 } from 'reactflow';
-import type { DiagramNodeData, GlobalParameters, SavedDesign } from '../types';
+import type { DiagramNodeData, GlobalParameters, SavedDesign, WireEdgeData } from '../types';
 import { CATALOG_BY_ID } from '../data/catalog';
 import { PRESETS } from '../data/presets';
+import { analyzeEdge, dominantBusVoltage, normalizeEdges, resolveAll } from '../lib/calculations';
+import { DEFAULT_RUN_FT } from '../data/wire';
 
 interface DiagramState {
   nodes: Node<DiagramNodeData>[];
   edges: Edge[];
   selectedNodeId: string | null;
+  selectedEdgeId: string | null;
   params: GlobalParameters;
 
   onNodesChange: (changes: NodeChange[]) => void;
@@ -28,6 +31,8 @@ interface DiagramState {
   updateNodeData: (nodeId: string, patch: Partial<DiagramNodeData>) => void;
   expandGroup: (nodeId: string) => void;
   selectNode: (nodeId: string | null) => void;
+  selectEdge: (edgeId: string | null) => void;
+  updateEdgeData: (edgeId: string, patch: Partial<WireEdgeData>) => void;
   clearDiagram: () => void;
 
   setParams: (patch: Partial<GlobalParameters>) => void;
@@ -41,11 +46,27 @@ function nextId(prefix: string): string {
 
 const STARTER = PRESETS[1]; // Overlanding
 
+function withWiring(
+  edges: Edge[],
+  nodes: Node<DiagramNodeData>[],
+  params: GlobalParameters,
+): Edge[] {
+  return normalizeEdges(edges, nodes, dominantBusVoltage(nodes, params.systemVoltage));
+}
+
+const initialNodes = STARTER.nodes.map((n) => ({ ...n, data: { ...n.data } }));
+const initialParams = { ...STARTER.params };
+
 export const useDiagramStore = create<DiagramState>((set, get) => ({
-  nodes: STARTER.nodes.map((n) => ({ ...n, data: { ...n.data } })),
-  edges: STARTER.edges.map((e) => ({ ...e })),
+  nodes: initialNodes,
+  edges: withWiring(
+    STARTER.edges.map((e) => ({ ...e })),
+    initialNodes,
+    initialParams,
+  ),
   selectedNodeId: null,
-  params: { ...STARTER.params },
+  selectedEdgeId: null,
+  params: initialParams,
 
   onNodesChange: (changes) => {
     set({ nodes: applyNodeChanges(changes, get().nodes) });
@@ -54,7 +75,24 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     set({ edges: applyEdgeChanges(changes, get().edges) });
   },
   onConnect: (connection) => {
-    set({ edges: addEdge({ ...connection, animated: true }, get().edges) });
+    const state = get();
+    const busV = dominantBusVoltage(state.nodes, state.params.systemVoltage);
+    const resolved = resolveAll(state.nodes);
+    const draft: Edge = {
+      id: nextId('e'),
+      source: connection.source!,
+      target: connection.target!,
+      sourceHandle: connection.sourceHandle ?? null,
+      targetHandle: connection.targetHandle ?? null,
+      animated: true,
+      data: {},
+    };
+    const analysis = analyzeEdge(draft, resolved, state.edges, busV);
+    draft.data = {
+      gauge: analysis ? analysis.suggestedGauge : '8',
+      lengthFt: DEFAULT_RUN_FT,
+    } satisfies WireEdgeData;
+    set({ edges: addEdge(draft, state.edges) });
   },
 
   addNodeFromSpec: (specId, position) => {
@@ -124,28 +162,44 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     });
   },
 
-  selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
-  clearDiagram: () => set({ nodes: [], edges: [], selectedNodeId: null }),
+  selectNode: (nodeId) => set({ selectedNodeId: nodeId, selectedEdgeId: null }),
+  selectEdge: (edgeId) => set({ selectedEdgeId: edgeId, selectedNodeId: null }),
+
+  updateEdgeData: (edgeId, patch) => {
+    set({
+      edges: get().edges.map((e) =>
+        e.id === edgeId ? { ...e, data: { ...(e.data ?? {}), ...patch } } : e,
+      ),
+    });
+  },
+
+  clearDiagram: () => set({ nodes: [], edges: [], selectedNodeId: null, selectedEdgeId: null }),
 
   setParams: (patch) => set({ params: { ...get().params, ...patch } }),
 
   loadPreset: (presetId) => {
     const preset = PRESETS.find((p) => p.id === presetId);
     if (!preset) return;
+    const nodes = preset.nodes.map((n) => ({ ...n, data: { ...n.data } }));
+    const params = { ...preset.params };
     set({
-      nodes: preset.nodes.map((n) => ({ ...n, data: { ...n.data } })),
-      edges: preset.edges.map((e) => ({ ...e })),
-      params: { ...preset.params },
+      nodes,
+      edges: withWiring(preset.edges.map((e) => ({ ...e })), nodes, params),
+      params,
       selectedNodeId: null,
+      selectedEdgeId: null,
     });
   },
 
   loadSnapshot: (design) => {
+    const nodes = design.nodes as Node<DiagramNodeData>[];
+    const params = design.params;
     set({
-      nodes: design.nodes as Node<DiagramNodeData>[],
-      edges: design.edges as Edge[],
-      params: design.params,
+      nodes,
+      edges: withWiring(design.edges as Edge[], nodes, params),
+      params,
       selectedNodeId: null,
+      selectedEdgeId: null,
     });
   },
 }));

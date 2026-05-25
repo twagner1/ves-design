@@ -6,7 +6,7 @@ import Parameters from './components/Parameters';
 import LiveStats from './components/LiveStats';
 import Timeline from './components/Timeline';
 import BillOfMaterials from './components/BillOfMaterials';
-import NodeInspector from './components/NodeInspector';
+import Inspector from './components/Inspector';
 import './App.css';
 
 export default function App() {
@@ -22,7 +22,7 @@ export default function App() {
           <Parameters />
           <LiveStats />
           <Timeline />
-          <NodeInspector />
+          <Inspector />
           <BillOfMaterials />
         </aside>
       </div>
