@@ -1,0 +1,109 @@
+:root {
+  --bg: #0b1220;
+  --bg-elev: #111a2e;
+  --bg-elev-2: #18243d;
+  --border: #1f2c47;
+  --border-strong: #2a3b5e;
+  --text: #d3dbeb;
+  --text-dim: #8a98b3;
+  --text-strong: #f4f7ff;
+
+  --accent: #4f8cff;
+  --accent-2: #22c55e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+
+  --source: #22c55e;
+  --storage: #3b82f6;
+  --conversion: #a855f7;
+  --distribution: #64748b;
+  --load: #f97316;
+
+  --radius: 8px;
+  --radius-sm: 4px;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+
+  font: 14px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4 {
+  color: var(--text-strong);
+  font-weight: 600;
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input[type='search'],
+input[type='number'],
+input[type='text'] {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+input[type='search']:focus,
+input[type='number']:focus,
+input[type='text']:focus {
+  border-color: var(--accent);
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+select {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+select:focus { border-color: var(--accent); }
+
+.btn {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover { background: var(--bg-elev); border-color: var(--accent); }
+.btn--ghost { background: transparent; }
+.btn--danger { color: var(--danger); border-color: rgba(239,68,68,0.4); }
+.btn--danger:hover { background: rgba(239,68,68,0.08); border-color: var(--danger); }
+.btn--sm { padding: 3px 8px; font-size: 12px; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3a4d75; }
