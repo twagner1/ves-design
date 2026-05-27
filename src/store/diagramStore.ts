@@ -148,17 +148,24 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
         data: { ...node.data, quantity: 1 },
       });
     }
-    const firstId = replacements[0].id;
-    // Reroute existing edges to/from the original to the first replacement.
-    const newEdges = state.edges.map((e) => {
-      if (e.source === nodeId) return { ...e, source: firstId };
-      if (e.target === nodeId) return { ...e, target: firstId };
-      return e;
+    const replacementIds = replacements.map((r) => r.id);
+    // Fan each edge touching the original out to every replacement so each
+    // expanded node keeps the original's connections instead of just the first.
+    const newEdges = state.edges.flatMap((e) => {
+      const touchesSource = e.source === nodeId;
+      const touchesTarget = e.target === nodeId;
+      if (!touchesSource && !touchesTarget) return [e];
+      return replacementIds.map((rid) => ({
+        ...e,
+        id: nextId('e'),
+        source: touchesSource ? rid : e.source,
+        target: touchesTarget ? rid : e.target,
+      }));
     });
     set({
       nodes: [...state.nodes.filter((n) => n.id !== nodeId), ...replacements],
       edges: newEdges,
-      selectedNodeId: firstId,
+      selectedNodeId: replacementIds[0],
     });
   },
 
