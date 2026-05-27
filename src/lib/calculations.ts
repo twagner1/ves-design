@@ -12,6 +12,20 @@ import { DEFAULT_RUN_FT, GAUGE_BY_AWG, suggestGauge } from '../data/wire';
 /** Assumed inverter efficiency when AC loads exist but no inverter is installed. */
 const DEFAULT_INVERTER_EFFICIENCY = 0.9;
 
+/**
+ * Built-in DC battery-charger output (W) of a Victron MultiPlus inverter/charger.
+ * Returns 0 for inverters that have no built-in charger.
+ * Single source of truth — used by both the static calc and the SoC simulator.
+ */
+export function inverterBuiltInChargerW(spec: ComponentSpec): number {
+  const id = spec.id;
+  if (id.includes('48-5000')) return 70 * 48;
+  if (id.includes('48-3000')) return 35 * 48;
+  if (id.includes('3000')) return 1440;
+  if (id.includes('2000')) return 960;
+  return 0;
+}
+
 export interface Calculations {
   storageWh: number;
   usableStorageWh: number;
@@ -162,19 +176,8 @@ export function calculate(
   let shoreChargerW = 0;
   if (hasShoreInlet) {
     for (const { spec, data } of resolved) {
-      if (spec.category === 'inverter') {
-        const id = spec.id;
-        const builtInChargerW = id.includes('48-5000')
-          ? 70 * 48
-          : id.includes('48-3000')
-            ? 35 * 48
-            : id.includes('3000')
-              ? 1440
-              : id.includes('2000')
-                ? 960
-                : 0;
-        shoreChargerW += builtInChargerW * data.quantity;
-      }
+      if (spec.category === 'inverter')
+        shoreChargerW += inverterBuiltInChargerW(spec) * data.quantity;
     }
   }
   const shoreGenerationWh = shoreChargerW * params.shorePowerHoursPerDay;
@@ -337,15 +340,8 @@ function sourceOutputWatts(r: Resolved): number {
     return (spec.outputWatts ?? (spec.outputAmps ?? 0) * (spec.outputVoltage ?? 12)) * data.quantity;
   if (spec.category === 'charge-controller' || spec.category === 'converter')
     return (spec.outputWatts ?? 0) * data.quantity;
-  if (spec.category === 'inverter') {
-    const id = spec.id;
-    const charger =
-      id.includes('48-5000') ? 70 * 48 :
-      id.includes('48-3000') ? 35 * 48 :
-      id.includes('3000') ? 1440 :
-      id.includes('2000') ? 960 : 0;
-    return charger * data.quantity;
-  }
+  if (spec.category === 'inverter')
+    return inverterBuiltInChargerW(spec) * data.quantity;
   return 0;
 }
 

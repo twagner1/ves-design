@@ -11,6 +11,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   inverter: 'Inverters',
   converter: 'Converters',
   'shore-power': 'Shore Power',
+  busbar: 'Busbars & Distribution',
   outlet: 'Outlets',
   light: 'Lights',
   fan: 'Fans',

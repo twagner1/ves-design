@@ -137,8 +137,8 @@ export default function LiveStats() {
                 </tr>
               </thead>
               <tbody>
-                {calc.loadBreakdown.map((l) => (
-                  <tr key={l.label}>
+                {calc.loadBreakdown.map((l, i) => (
+                  <tr key={`${l.label}-${i}`}>
                     <td>{l.label}</td>
                     <td className="num">{l.qty}</td>
                     <td>
@@ -156,15 +156,15 @@ export default function LiveStats() {
 
         {calc.errors.length > 0 && (
           <ul className="errors">
-            {calc.errors.map((e) => (
-              <li key={e}>✕ {e}</li>
+            {calc.errors.map((e, i) => (
+              <li key={`${e}-${i}`}>✕ {e}</li>
             ))}
           </ul>
         )}
         {calc.warnings.length > 0 && (
           <ul className="warnings">
-            {calc.warnings.map((w) => (
-              <li key={w}>⚠ {w}</li>
+            {calc.warnings.map((w, i) => (
+              <li key={`${w}-${i}`}>⚠ {w}</li>
             ))}
           </ul>
         )}
