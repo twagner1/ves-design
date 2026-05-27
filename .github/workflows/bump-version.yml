@@ -1,0 +1,32 @@
+name: Bump version on merge
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  bump:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write version file
+        run: |
+          PR=$(printf "%03d" "${{ github.event.pull_request.number }}")
+          echo "export const APP_VERSION = 'v0.${PR}';" > src/version.ts
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/version.ts
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: bump version to v0.$(printf '%03d' ${{ github.event.pull_request.number }}) [skip ci]"
+          git push

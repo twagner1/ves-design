@@ -3,6 +3,7 @@ import { CATALOG, CATEGORY_ORDER } from '../data/catalog';
 import { formatUsd } from '../lib/calculations';
 import { Illustration } from '../data/illustrations';
 import type { ComponentSpec } from '../types';
+import { APP_VERSION } from '../version';
 
 function PaletteItem({ spec }: { spec: ComponentSpec }) {
   const onDragStart = (event: React.DragEvent) => {
@@ -70,7 +71,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <header className="sidebar__header">
-        <h1>VES Design <span className="sidebar__version">v0.005</span></h1>
+        <h1>VES Design <span className="sidebar__version">{APP_VERSION}</span></h1>
         <p className="sidebar__tag">Van Electrical System Designer</p>
       </header>
       <div className="sidebar__search">
