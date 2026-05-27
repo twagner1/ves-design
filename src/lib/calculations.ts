@@ -9,6 +9,9 @@ import type {
 import { CATALOG_BY_ID } from '../data/catalog';
 import { DEFAULT_RUN_FT, GAUGE_BY_AWG, suggestGauge } from '../data/wire';
 
+/** Assumed inverter efficiency when AC loads exist but no inverter is installed. */
+const DEFAULT_INVERTER_EFFICIENCY = 0.9;
+
 export interface Calculations {
   storageWh: number;
   usableStorageWh: number;
@@ -94,7 +97,16 @@ export function calculate(
     );
   }
 
-  // Consumption
+  // AC loads are powered through an inverter; gross their battery draw up by
+  // the inverter conversion loss (avg of installed inverters, or a default).
+  const inverters = resolved.filter((r) => r.spec.category === 'inverter');
+  const inverterEfficiency =
+    inverters.length > 0
+      ? inverters.reduce((s, r) => s + (r.spec.efficiency ?? DEFAULT_INVERTER_EFFICIENCY), 0) /
+        inverters.length
+      : DEFAULT_INVERTER_EFFICIENCY;
+
+  // Consumption (battery-side Wh — AC loads include inverter loss)
   const loadBreakdown: Calculations['loadBreakdown'] = [];
   let dailyConsumptionWh = 0;
   let dcConsumptionWh = 0;
@@ -105,13 +117,15 @@ export function calculate(
     const watts = spec.ratedWatts ?? 0;
     const hours = data.hoursPerDay ?? spec.defaultHoursPerDay ?? 0;
     const qty = data.quantity;
-    const wh = watts * hours * qty;
+    const isAc = spec.currentType === 'AC';
+    const wh = (watts * hours * qty) / (isAc ? inverterEfficiency : 1);
     dailyConsumptionWh += wh;
-    if (spec.currentType === 'AC') acConsumptionWh += wh;
+    if (isAc) acConsumptionWh += wh;
     else dcConsumptionWh += wh;
     if (wh > 0)
       loadBreakdown.push({ label: spec.name, wattHours: wh, qty, currentType: spec.currentType });
-    if (spec.currentType === 'AC') peakAcLoadW = Math.max(peakAcLoadW, watts * qty);
+    // Inverter sizing is rated on AC output power, not the grossed-up draw.
+    if (isAc) peakAcLoadW = Math.max(peakAcLoadW, watts * qty);
   }
   loadBreakdown.sort((a, b) => b.wattHours - a.wattHours);
 
