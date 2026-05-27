@@ -79,8 +79,10 @@ export function simulate(
     const qty = n.data.quantity;
     if (spec.category === 'solar') peakSolarW += (spec.ratedWatts ?? 0) * qty;
     else if (spec.category === 'alternator') {
+      // outputWatts is the delivered DC output to the house bank (matches
+      // sourceOutputWatts in calculations.ts) — no extra efficiency derating.
       const w = spec.outputWatts ?? (spec.outputAmps ?? 0) * (spec.outputVoltage ?? 12);
-      alternatorRatedW += w * (spec.efficiency ?? 1) * qty;
+      alternatorRatedW += w * qty;
     } else if (spec.category === 'inverter') {
       const id = spec.id;
       const builtIn =

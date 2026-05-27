@@ -126,8 +126,10 @@ export function calculate(
   let alternatorOutputW = 0;
   for (const { spec, data } of resolved) {
     if (spec.category === 'alternator') {
+      // outputWatts/outputAmps already describe the charger's delivered DC
+      // output to the house bank, so no further efficiency derating applies.
       const w = spec.outputWatts ?? (spec.outputAmps ?? 0) * (spec.outputVoltage ?? 12);
-      alternatorOutputW += w * (spec.efficiency ?? 1) * data.quantity;
+      alternatorOutputW += w * data.quantity;
     }
   }
   const alternatorGenerationWh = alternatorOutputW * params.drivingHoursPerDay;
