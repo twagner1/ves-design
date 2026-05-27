@@ -70,7 +70,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <header className="sidebar__header">
-        <h1>VES Design</h1>
+        <h1>VES Design <span className="sidebar__version">v0.005</span></h1>
         <p className="sidebar__tag">Van Electrical System Designer</p>
       </header>
       <div className="sidebar__search">
