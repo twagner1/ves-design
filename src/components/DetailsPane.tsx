@@ -1,5 +1,5 @@
 import { useDiagramStore } from '../store/diagramStore';
-import { CATALOG_BY_ID } from '../data/catalog';
+import { CATALOG, CATALOG_BY_ID } from '../data/catalog';
 import { analyzeEdge, batteryBankStats, dominantBusVoltage, resolveAll } from '../lib/calculations';
 import { Illustration } from '../data/illustrations';
 import { WIRE_GAUGES } from '../data/wire';
@@ -9,12 +9,14 @@ function NodeEditor({ nodeId }: { nodeId: string }) {
   const updateNodeData = useDiagramStore((s) => s.updateNodeData);
   const removeNode = useDiagramStore((s) => s.removeNode);
   const expandGroup = useDiagramStore((s) => s.expandGroup);
+  const swapNodeSpec = useDiagramStore((s) => s.swapNodeSpec);
 
   const spec = CATALOG_BY_ID[node.data.specId];
   if (!spec) return null;
 
   const isLoad = spec.role === 'load';
   const isBattery = spec.role === 'storage';
+  const swapOptions = CATALOG.filter((c) => c.category === spec.category);
 
   return (
     <>
@@ -35,6 +37,23 @@ function NodeEditor({ nodeId }: { nodeId: string }) {
       </header>
       <div className="panel__body">
         {spec.notes && <p className="inspector__notes">{spec.notes}</p>}
+
+        {swapOptions.length > 1 && (
+          <div className="inspector__row">
+            <label>Swap</label>
+            <select
+              value={spec.id}
+              onChange={(e) => swapNodeSpec(node.id, e.target.value)}
+              title="Replace this component with another, keeping its wired connections"
+            >
+              {swapOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="inspector__row">
           <label>Quantity</label>
