@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { CATALOG, CATEGORY_ORDER } from '../data/catalog';
 import { formatUsd } from '../lib/calculations';
 import { Illustration } from '../data/illustrations';
+import { Chevron } from './Chevron';
 import type { ComponentSpec } from '../types';
 import { APP_VERSION } from '../version';
 
@@ -48,6 +49,15 @@ function PaletteItem({ spec }: { spec: ComponentSpec }) {
 export default function Sidebar() {
   const [query, setQuery] = useState('');
   const [voltageFilter, setVoltageFilter] = useState<'all' | '12' | '24' | '48'>('all');
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const toggleCategory = (category: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
+      return next;
+    });
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -99,14 +109,25 @@ export default function Sidebar() {
         {CATEGORY_ORDER.map(({ category, label }) => {
           const items = filtered.filter((c) => c.category === category);
           if (items.length === 0) return null;
+          const isOpen = !collapsed.has(category);
           return (
             <section key={category} className="palette-section">
-              <h2 className="palette-section__title">{label}</h2>
-              <div className="palette-section__items">
-                {items.map((spec) => (
-                  <PaletteItem key={spec.id} spec={spec} />
-                ))}
-              </div>
+              <button
+                type="button"
+                className="palette-section__title"
+                aria-expanded={isOpen}
+                onClick={() => toggleCategory(category)}
+              >
+                <Chevron open={isOpen} size={10} />
+                <span>{label}</span>
+              </button>
+              {isOpen && (
+                <div className="palette-section__items">
+                  {items.map((spec) => (
+                    <PaletteItem key={spec.id} spec={spec} />
+                  ))}
+                </div>
+              )}
             </section>
           );
         })}

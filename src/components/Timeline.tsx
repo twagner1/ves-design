@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useDiagramStore } from '../store/diagramStore';
 import { simulate, type HourPoint } from '../lib/simulator';
+import CollapsiblePanel from './CollapsiblePanel';
 
 const WIDTH = 340;
 const HEIGHT = 140;
@@ -56,12 +57,10 @@ export default function Timeline() {
     ) : null;
 
   return (
-    <section className="panel">
-      <header className="panel__header">
-        <h2>Battery SoC Simulation</h2>
-        <span className="panel__busv">{params.simulationDays}-day forecast</span>
-      </header>
-      <div className="panel__body">
+    <CollapsiblePanel
+      title="Battery SoC Simulation"
+      headerRight={<span className="panel__busv">{params.simulationDays}-day forecast</span>}
+    >
         <div className="param-row" style={{ marginBottom: 8 }}>
           <div className="param-row__head">
             <label className="param-row__label">Simulation length</label>
@@ -198,7 +197,6 @@ export default function Timeline() {
             {hover.shoreW.toFixed(0)}W · load {hover.loadW.toFixed(0)}W
           </div>
         )}
-      </div>
-    </section>
+    </CollapsiblePanel>
   );
 }
