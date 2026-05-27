@@ -28,6 +28,7 @@ interface DiagramState {
 
   addNodeFromSpec: (specId: string, position: { x: number; y: number }) => void;
   removeNode: (nodeId: string) => void;
+  swapNodeSpec: (nodeId: string, newSpecId: string) => void;
   updateNodeData: (nodeId: string, patch: Partial<DiagramNodeData>) => void;
   expandGroup: (nodeId: string) => void;
   selectNode: (nodeId: string | null) => void;
@@ -120,6 +121,33 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       nodes: get().nodes.filter((n) => n.id !== nodeId),
       edges: get().edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
       selectedNodeId: get().selectedNodeId === nodeId ? null : get().selectedNodeId,
+    });
+  },
+
+  swapNodeSpec: (nodeId, newSpecId) => {
+    const spec = CATALOG_BY_ID[newSpecId];
+    if (!spec) return;
+    set({
+      nodes: get().nodes.map((n) => {
+        if (n.id !== nodeId) return n;
+        const isBattery = spec.role === 'storage';
+        const isLoad = spec.role === 'load';
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            specId: newSpecId,
+            label: spec.name,
+            // Keep series/parallel only while the node stays a battery; carry
+            // usage hours across loads, otherwise drop role-specific fields.
+            seriesCount: isBattery ? (n.data.seriesCount ?? 1) : undefined,
+            parallelCount: isBattery ? (n.data.parallelCount ?? 1) : undefined,
+            hoursPerDay: isLoad
+              ? (n.data.hoursPerDay ?? spec.defaultHoursPerDay)
+              : undefined,
+          },
+        };
+      }),
     });
   },
 
