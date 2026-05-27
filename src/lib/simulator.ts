@@ -73,15 +73,19 @@ export function simulate(
   let peakSolarW = 0;
   let alternatorRatedW = 0;
   let shoreChargerW = 0;
+  const hasShoreInlet = nodes.some((n) => CATALOG_BY_ID[n.data.specId]?.category === 'shore-power');
   for (const n of nodes) {
     const spec = CATALOG_BY_ID[n.data.specId];
     if (!spec) continue;
     const qty = n.data.quantity;
     if (spec.category === 'solar') peakSolarW += (spec.ratedWatts ?? 0) * qty;
     else if (spec.category === 'alternator') {
+      // outputWatts is the delivered DC output to the house bank (matches
+      // sourceOutputWatts in calculations.ts) — no extra efficiency derating.
       const w = spec.outputWatts ?? (spec.outputAmps ?? 0) * (spec.outputVoltage ?? 12);
-      alternatorRatedW += w * (spec.efficiency ?? 1) * qty;
-    } else if (spec.category === 'inverter') {
+      alternatorRatedW += w * qty;
+    } else if (spec.category === 'inverter' && hasShoreInlet) {
+      // Shore charging needs both an AC inlet and an inverter/charger.
       const id = spec.id;
       const builtIn =
         id.includes('48-5000') ? 70 * 48 :
@@ -90,9 +94,6 @@ export function simulate(
         id.includes('2000') ? 960 : 0;
       shoreChargerW += builtIn * qty;
     }
-  }
-  if (shoreChargerW === 0 && nodes.some((n) => CATALOG_BY_ID[n.data.specId]?.category === 'shore-power')) {
-    shoreChargerW = 480;
   }
 
   // Average constant load draw (assume constant throughout day)

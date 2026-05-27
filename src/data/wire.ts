@@ -30,10 +30,25 @@ export const GAUGE_BY_AWG: Record<string, WireGauge> = Object.fromEntries(
 
 export const DEFAULT_RUN_FT = 5;
 
-/** Smallest gauge whose ampacity covers current × 1.25 safety margin. */
-export function suggestGauge(current: number): string {
+/** Voltage-drop target for critical DC circuits (matches the warning threshold). */
+export const VOLTAGE_DROP_TARGET_PCT = 3;
+
+/**
+ * Smallest gauge whose ampacity covers current × 1.25, and — when the run
+ * length and segment voltage are known — also keeps round-trip voltage drop
+ * within the 3% target so the suggestion actually resolves a drop warning.
+ */
+export function suggestGauge(current: number, lengthFt?: number, voltage?: number): string {
   if (current <= 0) return '14';
-  const target = current * 1.25;
-  const found = WIRE_GAUGES.find((g) => g.ampacity >= target);
+  const ampacityTarget = current * 1.25;
+  const checkDrop = lengthFt != null && voltage != null && voltage > 0;
+  const found = WIRE_GAUGES.find((g) => {
+    if (g.ampacity < ampacityTarget) return false;
+    if (checkDrop) {
+      const dropPct = ((current * 2 * lengthFt * g.ohmsPerFoot) / voltage) * 100;
+      if (dropPct > VOLTAGE_DROP_TARGET_PCT) return false;
+    }
+    return true;
+  });
   return (found ?? WIRE_GAUGES[WIRE_GAUGES.length - 1]).awg;
 }
