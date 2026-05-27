@@ -425,7 +425,7 @@ export function analyzeEdge(
     voltageDropPct,
     ampacity: g.ampacity,
     overAmpacity: currentA > g.ampacity,
-    suggestedGauge: suggestGauge(currentA),
+    suggestedGauge: suggestGauge(currentA, lengthFt, voltage),
     currentType: edgeCurrentType(edge, resolved),
     sourceName: src.spec.name,
     targetName: tgt?.spec.name ?? '(open)',
