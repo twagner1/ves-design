@@ -18,8 +18,12 @@ export default function Toolbar() {
   const handleSave = () => {
     const name = window.prompt('Name this design:', `Design ${saved.length + 1}`);
     if (name == null) return;
-    saveDesign(name, { nodes, edges, params });
-    setSaved(loadAll());
+    try {
+      saveDesign(name, { nodes, edges, params });
+      setSaved(loadAll());
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not save design.');
+    }
   };
 
   const handleLoad = (id: string) => {

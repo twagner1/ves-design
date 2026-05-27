@@ -1,7 +1,7 @@
 import type { Edge, Node } from 'reactflow';
 import type { DiagramNodeData, GlobalParameters } from '../types';
 import { CATALOG_BY_ID } from '../data/catalog';
-import { calculate } from './calculations';
+import { calculate, inverterBuiltInChargerW } from './calculations';
 
 export interface HourPoint {
   hour: number;       // hours from start (0 = midnight day 1)
@@ -53,11 +53,14 @@ function inDrivingBlock(hourOfDay: number, drivingHoursPerDay: number): boolean 
 
 function inShoreBlock(hourOfDay: number, shoreHoursPerDay: number): boolean {
   // Treat shore as plugged in starting at 6pm running through the night.
+  // Use float arithmetic so fractional hours (e.g. 2.5h) are handled correctly.
   const start = 18;
-  for (let h = 0; h < shoreHoursPerDay; h++) {
-    if (hourOfDay === (start + h) % 24) return true;
+  const end = start + shoreHoursPerDay; // may exceed 24 — wrap with modulo
+  if (end <= 24) {
+    return hourOfDay >= start && hourOfDay < end;
   }
-  return false;
+  // Wraps past midnight: in-block when past 18:00 OR before the wrap-around end.
+  return hourOfDay >= start || hourOfDay < end - 24;
 }
 
 export function simulate(
@@ -86,13 +89,7 @@ export function simulate(
       alternatorRatedW += w * qty;
     } else if (spec.category === 'inverter' && hasShoreInlet) {
       // Shore charging needs both an AC inlet and an inverter/charger.
-      const id = spec.id;
-      const builtIn =
-        id.includes('48-5000') ? 70 * 48 :
-        id.includes('48-3000') ? 35 * 48 :
-        id.includes('3000') ? 1440 :
-        id.includes('2000') ? 960 : 0;
-      shoreChargerW += builtIn * qty;
+      shoreChargerW += inverterBuiltInChargerW(spec) * qty;
     }
   }
 
@@ -104,6 +101,8 @@ export function simulate(
   let socWh = capacityWh > 0 ? (capacityWh * params.startingSocPct) / 100 : 0;
   let fullChargeHits = 0;
   let emptyHits = 0;
+  let wasFull = false;
+  let wasEmpty = false;
   let minSoc = 100;
   let maxSoc = -1;
 
@@ -123,11 +122,19 @@ export function simulate(
     if (capacityWh > 0) {
       if (socWh > capacityWh) {
         socWh = capacityWh;
-        fullChargeHits++;
+        // Count only the transition into full, not every hour spent there.
+        if (!wasFull) fullChargeHits++;
+        wasFull = true;
+      } else {
+        wasFull = false;
       }
       if (socWh < 0) {
         socWh = 0;
-        emptyHits++;
+        // Count only the transition into empty, not every hour spent there.
+        if (!wasEmpty) emptyHits++;
+        wasEmpty = true;
+      } else {
+        wasEmpty = false;
       }
     }
 

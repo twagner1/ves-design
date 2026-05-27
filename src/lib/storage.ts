@@ -35,7 +35,13 @@ export function saveDesign(name: string, snapshot: DesignSnapshot): SavedDesign 
   all.unshift(design);
   // Cap at 20 designs.
   while (all.length > 20) all.pop();
-  localStorage.setItem(KEY, JSON.stringify(all));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(all));
+  } catch {
+    // QuotaExceededError (storage full) or SecurityError (private mode) —
+    // surface to the caller so the UI can notify the user.
+    throw new Error('Could not save design: browser storage is full or unavailable.');
+  }
   return design;
 }
 

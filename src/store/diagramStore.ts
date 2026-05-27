@@ -199,11 +199,35 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   },
 
   loadSnapshot: (design) => {
-    const nodes = design.nodes as Node<DiagramNodeData>[];
-    const params = design.params;
+    // Validate the saved shape at the boundary so stale/corrupted data can't
+    // propagate NaN or undefined into the store and poison every calculation.
+    const rawNodes = Array.isArray(design.nodes) ? (design.nodes as Node<DiagramNodeData>[]) : [];
+    const rawEdges = Array.isArray(design.edges) ? (design.edges as Edge[]) : [];
+
+    const nodes = rawNodes
+      .filter((n) => n && typeof n.data?.specId === 'string')
+      .map((n) => ({
+        ...n,
+        data: {
+          ...n.data,
+          quantity: Math.max(1, Number(n.data.quantity) || 1),
+        },
+      }));
+
+    const saved = design.params ?? {};
+    const params: import('../types').GlobalParameters = {
+      sunlightHoursPerDay: Number(saved.sunlightHoursPerDay) || 5,
+      shorePowerHoursPerDay: Number(saved.shorePowerHoursPerDay) || 0,
+      drivingHoursPerDay: Number(saved.drivingHoursPerDay) || 1,
+      solarDerating: Number(saved.solarDerating) || 0.75,
+      systemVoltage: ([12, 24, 48] as const).includes(saved.systemVoltage) ? saved.systemVoltage : 12,
+      simulationDays: Number(saved.simulationDays) || 7,
+      startingSocPct: Number(saved.startingSocPct ?? 80),
+    };
+
     set({
       nodes,
-      edges: withWiring(design.edges as Edge[], nodes, params),
+      edges: withWiring(rawEdges, nodes, params),
       params,
       selectedNodeId: null,
       selectedEdgeId: null,
