@@ -102,6 +102,13 @@
   font-size: 16px;
   letter-spacing: 0.3px;
 }
+.sidebar__version {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
 .sidebar__tag {
   margin: 2px 0 0;
   font-size: 11px;
