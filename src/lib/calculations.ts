@@ -124,17 +124,25 @@ export function calculate(
     else dcConsumptionWh += wh;
     if (wh > 0)
       loadBreakdown.push({ label: spec.name, wattHours: wh, qty, currentType: spec.currentType });
-    // Inverter sizing is rated on AC output power, not the grossed-up draw.
-    if (isAc) peakAcLoadW = Math.max(peakAcLoadW, watts * qty);
+    // Inverter must handle the combined simultaneous AC draw (rated on AC
+    // output power, not the grossed-up battery draw).
+    if (isAc) peakAcLoadW += watts * qty;
   }
   loadBreakdown.sort((a, b) => b.wattHours - a.wattHours);
 
-  // Solar
+  // Solar — harvest is bounded by the charge controller's throughput.
   let peakSolarW = 0;
   for (const { spec, data } of resolved) {
     if (spec.category === 'solar') peakSolarW += (spec.ratedWatts ?? 0) * data.quantity;
   }
-  const solarGenerationWh = peakSolarW * params.sunlightHoursPerDay * params.solarDerating;
+  let controllerCapacityW = 0;
+  for (const { spec, data } of resolved) {
+    if (spec.category === 'charge-controller')
+      controllerCapacityW += (spec.outputWatts ?? 0) * data.quantity;
+  }
+  const effectiveSolarW =
+    controllerCapacityW > 0 ? Math.min(peakSolarW, controllerCapacityW) : peakSolarW;
+  const solarGenerationWh = effectiveSolarW * params.sunlightHoursPerDay * params.solarDerating;
 
   // Alternator
   let alternatorOutputW = 0;
@@ -148,25 +156,26 @@ export function calculate(
   }
   const alternatorGenerationWh = alternatorOutputW * params.drivingHoursPerDay;
 
-  // Shore
+  // Shore — charging needs both an AC inlet and an inverter/charger to convert
+  // it to DC; a bare inlet (or a charger with no inlet) provides no charging.
+  const hasShoreInlet = resolved.some((r) => r.spec.category === 'shore-power');
   let shoreChargerW = 0;
-  for (const { spec, data } of resolved) {
-    if (spec.category === 'inverter') {
-      const id = spec.id;
-      const builtInChargerW = id.includes('48-5000')
-        ? 70 * 48
-        : id.includes('48-3000')
-          ? 35 * 48
-          : id.includes('3000')
-            ? 1440
-            : id.includes('2000')
-              ? 960
-              : 0;
-      shoreChargerW += builtInChargerW * data.quantity;
+  if (hasShoreInlet) {
+    for (const { spec, data } of resolved) {
+      if (spec.category === 'inverter') {
+        const id = spec.id;
+        const builtInChargerW = id.includes('48-5000')
+          ? 70 * 48
+          : id.includes('48-3000')
+            ? 35 * 48
+            : id.includes('3000')
+              ? 1440
+              : id.includes('2000')
+                ? 960
+                : 0;
+        shoreChargerW += builtInChargerW * data.quantity;
+      }
     }
-  }
-  if (shoreChargerW === 0 && resolved.some((r) => r.spec.category === 'shore-power')) {
-    shoreChargerW = 480;
   }
   const shoreGenerationWh = shoreChargerW * params.shorePowerHoursPerDay;
 
@@ -176,11 +185,6 @@ export function calculate(
     dailyConsumptionWh > 0 ? usableStorageWh / dailyConsumptionWh : Infinity;
 
   // Capacity tallies
-  let controllerCapacityW = 0;
-  for (const { spec, data } of resolved) {
-    if (spec.category === 'charge-controller')
-      controllerCapacityW += (spec.outputWatts ?? 0) * data.quantity;
-  }
   let inverterCapacityW = 0;
   for (const { spec, data } of resolved) {
     if (spec.category === 'inverter')
