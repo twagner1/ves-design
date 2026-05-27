@@ -1,4 +1,5 @@
 import { useDiagramStore } from '../store/diagramStore';
+import CollapsiblePanel from './CollapsiblePanel';
 
 interface SliderRow {
   label: string;
@@ -39,11 +40,7 @@ export default function Parameters() {
   const setParams = useDiagramStore((s) => s.setParams);
 
   return (
-    <section className="panel">
-      <header className="panel__header">
-        <h2>Daily Use Parameters</h2>
-      </header>
-      <div className="panel__body">
+    <CollapsiblePanel title="Daily Use Parameters">
         <SliderRow
           label="Sunlight"
           help="Effective peak-sun hours your panels collect on an average day."
@@ -84,7 +81,6 @@ export default function Parameters() {
           suffix="×"
           onChange={(v) => setParams({ solarDerating: v })}
         />
-      </div>
-    </section>
+    </CollapsiblePanel>
   );
 }

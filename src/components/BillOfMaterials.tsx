@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useDiagramStore } from '../store/diagramStore';
 import { buildBom, formatUsd } from '../lib/calculations';
 import { bomToCsv, downloadCsv } from '../lib/csv';
+import CollapsiblePanel from './CollapsiblePanel';
 
 const CATEGORY_LABELS: Record<string, string> = {
   battery: 'Batteries',
@@ -41,10 +42,10 @@ export default function BillOfMaterials() {
   };
 
   return (
-    <section className="panel">
-      <header className="panel__header">
-        <h2>Bill of Materials</h2>
-        <div className="panel__header-right">
+    <CollapsiblePanel
+      title="Bill of Materials"
+      headerRight={
+        <>
           <span className="panel__total">{formatUsd(bom.total)}</span>
           <button
             type="button"
@@ -55,9 +56,9 @@ export default function BillOfMaterials() {
           >
             Export CSV
           </button>
-        </div>
-      </header>
-      <div className="panel__body">
+        </>
+      }
+    >
         {bom.lines.length === 0 ? (
           <p className="empty">No components yet. Drag from the palette to get started.</p>
         ) : (
@@ -89,7 +90,6 @@ export default function BillOfMaterials() {
             ))}
           </div>
         )}
-      </div>
-    </section>
+    </CollapsiblePanel>
   );
 }

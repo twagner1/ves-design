@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useDiagramStore } from '../store/diagramStore';
 import { calculate, formatW, formatWh } from '../lib/calculations';
+import CollapsiblePanel from './CollapsiblePanel';
 
 function Stat({
   label,
@@ -43,12 +44,10 @@ export default function LiveStats() {
     calc.dailyConsumptionWh === 0 ? 'info' : calc.netDailyWh >= 0 ? 'good' : 'bad';
 
   return (
-    <section className="panel">
-      <header className="panel__header">
-        <h2>Live Energy Balance</h2>
-        <span className="panel__busv">{calc.busVoltage}V bus</span>
-      </header>
-      <div className="panel__body">
+    <CollapsiblePanel
+      title="Live Energy Balance"
+      headerRight={<span className="panel__busv">{calc.busVoltage}V bus</span>}
+    >
         <div className="stat-grid">
           <Stat
             label="Storage (usable)"
@@ -168,7 +167,6 @@ export default function LiveStats() {
             ))}
           </ul>
         )}
-      </div>
-    </section>
+    </CollapsiblePanel>
   );
 }
