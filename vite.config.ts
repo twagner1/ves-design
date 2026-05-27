@@ -14,34 +14,26 @@ function git(cmd: string): string | null {
   }
 }
 
-// Resolve a version string at build time so every deployment shows a fresh,
-// monotonically increasing value. The number is a UTC build timestamp
-// (Cloudflare builds use a shallow clone, so a git commit count is unreliable),
-// paired with the short commit SHA for traceability. The SHA comes from
-// Cloudflare's build env vars, falling back to git, then a local placeholder.
-function resolveVersion(now: Date): string {
-  const envSha =
-    process.env.WORKERS_CI_COMMIT_SHA ||
-    process.env.CF_PAGES_COMMIT_SHA ||
-    process.env.GITHUB_SHA ||
+// Derive the version from the PR number at build time, so every merged PR
+// deploys an incrementing version (e.g. PR #8 -> v0.008). The PR number is
+// read from the head commit subject, which works on Cloudflare's shallow
+// clone. Handles both merge commits ("Merge pull request #8 from ...") and
+// squash merges ("Title (#8)"); non-PR builds fall back to v0.000.
+function resolveVersion(): string {
+  const subject = git('log -1 --pretty=%s') || ''
+  const pr =
+    subject.match(/Merge pull request #(\d+)/)?.[1] ??
+    subject.match(/\(#(\d+)\)\s*$/)?.[1] ??
     null
-  const sha = (envSha || git('rev-parse --short HEAD') || 'local').slice(0, 7)
-  const p = (n: number) => String(n).padStart(2, '0')
-  const stamp =
-    `${String(now.getUTCFullYear()).slice(2)}.${p(now.getUTCMonth() + 1)}.` +
-    `${p(now.getUTCDate())}.${p(now.getUTCHours())}${p(now.getUTCMinutes())}`
-  return `v${stamp} (${sha})`
+  return pr ? `v0.${pr.padStart(3, '0')}` : 'v0.000'
 }
 
-const BUILD_NOW = new Date()
-const APP_VERSION = resolveVersion(BUILD_NOW)
-const BUILD_TIME = `${BUILD_NOW.toISOString().slice(0, 16).replace('T', ' ')} UTC`
+const APP_VERSION = resolveVersion()
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), cloudflare()],
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
-    __BUILD_TIME__: JSON.stringify(BUILD_TIME),
   },
 })
