@@ -229,8 +229,20 @@
   display: flex;
   flex-direction: column;
   background: var(--bg-elev);
-  overflow-y: auto;
+  overflow: hidden;
   border-left: 1px solid var(--border);
+}
+.rightpane__top {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.rightpane__bottom {
+  flex: 0 0 auto;
+  max-height: 48%;
+  overflow-y: auto;
+  background: var(--bg-elev);
+  border-top: 2px solid var(--border-strong);
 }
 
 .panel { border-bottom: 1px solid var(--border); }
@@ -414,6 +426,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 /* Inspector */
+.details-pane {
+  border-bottom: none;
+}
 .inspector .panel__header h2 {
   font-size: 12px;
   text-transform: none;

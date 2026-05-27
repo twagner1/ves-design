@@ -246,28 +246,31 @@ function EdgeEditor({ edgeId }: { edgeId: string }) {
   );
 }
 
-export default function Inspector() {
+export default function DetailsPane() {
   const selectedNodeId = useDiagramStore((s) => s.selectedNodeId);
   const selectedEdgeId = useDiagramStore((s) => s.selectedEdgeId);
 
   if (selectedNodeId) {
     return (
-      <section className="panel inspector">
+      <section className="panel inspector details-pane">
         <NodeEditor nodeId={selectedNodeId} />
       </section>
     );
   }
   if (selectedEdgeId) {
     return (
-      <section className="panel inspector">
+      <section className="panel inspector details-pane">
         <EdgeEditor edgeId={selectedEdgeId} />
       </section>
     );
   }
   return (
-    <section className="panel inspector inspector--empty">
+    <section className="panel inspector details-pane inspector--empty">
+      <header className="panel__header">
+        <h2>Details</h2>
+      </header>
       <div className="inspector__hint">
-        Click a component to edit quantity, series/parallel, or usage. Click a wire to set its
+        Select a component to edit quantity, series/parallel, or usage. Select a wire to set its
         gauge and run length.
       </div>
     </section>
