@@ -50,7 +50,7 @@ export const CATALOG: ComponentSpec[] = [
 
   {
     id: 'lithionics-320ah',
-    name: 'Lithionics GTX12V320A 320Ah',
+    name: 'Lithionics GTX 12V 320Ah (E2107)',
     category: 'battery',
     role: 'storage',
     icon: '🔋',
@@ -61,7 +61,7 @@ export const CATALOG: ComponentSpec[] = [
     capacityWh: 4096,
     usableFraction: 1.0,
     price: 4699,
-    notes: 'LiFePO4 with integrated heater and NeverDie BMS. Factory battery in Winnebago Ekko.',
+    notes: 'Lithionics GTX12V320A-E2107 with built-in heater and NeverDie BMS. 12.8V nominal, ~4.1kWh, ~200A continuous. Factory house battery in the Winnebago Ekko (dual = 640Ah / ~8.2kWh).',
   },
 
   // ───────── BATTERIES (24V) ─────────
@@ -690,6 +690,19 @@ export const CATALOG: ComponentSpec[] = [
     price: 1599,
     notes: '~30W average electrical (fuel-powered heat).',
   },
+  {
+    id: 'rooftop-ac-13500',
+    name: '13.5k BTU Low-Profile Rooftop A/C',
+    category: 'hvac',
+    role: 'load',
+    icon: '❄️',
+    currentType: 'AC',
+    outputVoltage: 120,
+    ratedWatts: 1200,
+    defaultHoursPerDay: 3,
+    price: 1095,
+    notes: '13,500 BTU ducted rooftop A/C. ~1200W running (higher startup surge), 120VAC off the inverter. Factory A/C on the Winnebago Ekko.',
+  },
 
   // ───────── APPLIANCES ─────────
   {
@@ -751,6 +764,45 @@ export const CATALOG: ComponentSpec[] = [
     ratedWatts: 1000,
     defaultHoursPerDay: 0.1,
     price: 89,
+  },
+  {
+    id: 'furrion-microwave-conv',
+    name: 'Furrion 1.5 cu ft Convection Microwave',
+    category: 'appliance',
+    role: 'load',
+    icon: '🍲',
+    currentType: 'AC',
+    outputVoltage: 120,
+    ratedWatts: 900,
+    defaultHoursPerDay: 0.1,
+    price: 399,
+    notes: 'Furrion FMCM15SS. ~900W microwave / ~1450W convection at 120VAC. Factory microwave in the Winnebago Ekko.',
+  },
+  {
+    id: 'furrion-induction',
+    name: 'Furrion Portable Induction Cooktop (1500W)',
+    category: 'appliance',
+    role: 'load',
+    icon: '🍳',
+    currentType: 'AC',
+    outputVoltage: 120,
+    ratedWatts: 1500,
+    defaultHoursPerDay: 0.5,
+    price: 99,
+    notes: 'Furrion FIH1ZEA single-burner portable induction. 1500W at 120VAC. Factory cooktop in the Winnebago Ekko.',
+  },
+  {
+    id: 'carefree-power-awning',
+    name: "Carefree 13' Power Awning",
+    category: 'appliance',
+    role: 'load',
+    icon: '⛱️',
+    currentType: 'DC',
+    systemVoltage: 12,
+    ratedWatts: 90,
+    defaultHoursPerDay: 0.1,
+    price: 1249,
+    notes: "Carefree of Colorado 13' powered patio awning with LED lighting. ~5–8A @ 12V motor, drawn only while extending/retracting. Factory awning on the Winnebago Ekko.",
   },
 ];
 

@@ -148,7 +148,8 @@ const fulltime: Preset = {
 const ekko23b: Preset = {
   id: 'ekko23b',
   name: 'Winnebago Ekko 23B',
-  description: 'Dual 320Ah Lithionics, 530W solar, Balmar 170A alternator, Xantrex 2000W. 12V, ~8.2kWh.',
+  description:
+    'Dual 320Ah Lithionics (~8.2kWh), 530W solar, Balmar 170A + Wakespeed, Xantrex 2000W, 13.5k BTU A/C, induction + convection microwave.',
   params: baseParams({ sunlightHoursPerDay: 5, drivingHoursPerDay: 2 }),
   nodes: [
     node('ek-solar-215', 'solar-215w', 40, 40, { quantity: 2 }),
@@ -158,12 +159,18 @@ const ekko23b: Preset = {
     node('ek-shore', 'shore-30a', 40, 470),
     node('ek-batt', 'lithionics-320ah', 320, 230, { quantity: 2, seriesCount: 1, parallelCount: 1 }),
     node('ek-inv', 'xantrex-freedom-xc-2000', 600, 230),
-    node('ek-fridge', 'fridge-dometic-cfx', 880, 40),
-    node('ek-fan', 'maxxair-7500', 880, 160),
-    node('ek-water', 'water-pump', 880, 280),
-    node('ek-lights', 'light-puck', 880, 380, { quantity: 4 }),
-    node('ek-phone', 'phone-charging', 880, 480),
-    node('ek-laptop', 'laptop-charging', 880, 580),
+    // DC loads off the battery / 12V bus
+    node('ek-fridge', 'fridge-dometic-cfx', 880, 20),
+    node('ek-fan', 'maxxair-7500', 880, 120),
+    node('ek-water', 'water-pump', 880, 220),
+    node('ek-lights', 'light-puck', 880, 320, { quantity: 4 }),
+    node('ek-phone', 'phone-charging', 880, 420),
+    node('ek-laptop', 'laptop-charging', 880, 500),
+    node('ek-awning', 'carefree-power-awning', 880, 600),
+    // 120VAC loads off the inverter
+    node('ek-ac', 'rooftop-ac-13500', 1160, 40),
+    node('ek-micro', 'furrion-microwave-conv', 1160, 160),
+    node('ek-induction', 'furrion-induction', 1160, 280),
   ],
   edges: [
     edge('eke1', 'ek-solar-215', 'ek-mppt'),
@@ -178,6 +185,10 @@ const ekko23b: Preset = {
     edge('eke10', 'ek-batt', 'ek-lights'),
     edge('eke11', 'ek-batt', 'ek-phone'),
     edge('eke12', 'ek-batt', 'ek-laptop'),
+    edge('eke13', 'ek-batt', 'ek-awning'),
+    edge('eke14', 'ek-inv', 'ek-ac'),
+    edge('eke15', 'ek-inv', 'ek-micro'),
+    edge('eke16', 'ek-inv', 'ek-induction'),
   ],
 };
 
