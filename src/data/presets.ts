@@ -144,4 +144,41 @@ const fulltime: Preset = {
   ],
 };
 
-export const PRESETS: Preset[] = [weekend, overland, fulltime];
+// ───────── Winnebago Ekko 23B (Dual Lithionics) ─────────
+const ekko23b: Preset = {
+  id: 'ekko23b',
+  name: 'Winnebago Ekko 23B',
+  description: 'Dual 320Ah Lithionics, 530W solar, Balmar 170A alternator, Xantrex 2000W. 12V, ~8.2kWh.',
+  params: baseParams({ sunlightHoursPerDay: 5, drivingHoursPerDay: 2 }),
+  nodes: [
+    node('ek-solar-215', 'solar-215w', 40, 40, { quantity: 2 }),
+    node('ek-solar-100', 'solar-100w', 40, 180),
+    node('ek-mppt', 'victron-100-30', 320, 40),
+    node('ek-alt', 'balmar-170a', 40, 330),
+    node('ek-shore', 'shore-30a', 40, 470),
+    node('ek-batt', 'lithionics-320ah', 320, 230, { quantity: 2, seriesCount: 1, parallelCount: 1 }),
+    node('ek-inv', 'xantrex-freedom-xc-2000', 600, 230),
+    node('ek-fridge', 'fridge-dometic-cfx', 880, 40),
+    node('ek-fan', 'maxxair-7500', 880, 160),
+    node('ek-water', 'water-pump', 880, 280),
+    node('ek-lights', 'light-puck', 880, 380, { quantity: 4 }),
+    node('ek-phone', 'phone-charging', 880, 480),
+    node('ek-laptop', 'laptop-charging', 880, 580),
+  ],
+  edges: [
+    edge('eke1', 'ek-solar-215', 'ek-mppt'),
+    edge('eke2', 'ek-solar-100', 'ek-mppt'),
+    edge('eke3', 'ek-mppt', 'ek-batt'),
+    edge('eke4', 'ek-alt', 'ek-batt'),
+    edge('eke5', 'ek-shore', 'ek-inv'),
+    edge('eke6', 'ek-batt', 'ek-inv'),
+    edge('eke7', 'ek-batt', 'ek-fridge'),
+    edge('eke8', 'ek-batt', 'ek-fan'),
+    edge('eke9', 'ek-batt', 'ek-water'),
+    edge('eke10', 'ek-batt', 'ek-lights'),
+    edge('eke11', 'ek-batt', 'ek-phone'),
+    edge('eke12', 'ek-batt', 'ek-laptop'),
+  ],
+};
+
+export const PRESETS: Preset[] = [weekend, overland, fulltime, ekko23b];
