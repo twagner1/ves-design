@@ -48,6 +48,22 @@ export const CATALOG: ComponentSpec[] = [
     notes: 'Bluetooth-enabled lithium battery.',
   },
 
+  {
+    id: 'lithionics-320ah',
+    name: 'Lithionics GTX12V320A 320Ah',
+    category: 'battery',
+    role: 'storage',
+    icon: '🔋',
+    currentType: 'DC',
+    systemVoltage: 12,
+    outputVoltage: 12,
+    capacityAh: 320,
+    capacityWh: 4096,
+    usableFraction: 1.0,
+    price: 4699,
+    notes: 'LiFePO4 with integrated heater and NeverDie BMS. Factory battery in Winnebago Ekko.',
+  },
+
   // ───────── BATTERIES (24V) ─────────
   {
     id: 'victron-200ah-24v',
@@ -107,6 +123,17 @@ export const CATALOG: ComponentSpec[] = [
     currentType: 'DC',
     ratedWatts: 100,
     price: 120,
+    notes: 'Monocrystalline rigid panel.',
+  },
+  {
+    id: 'solar-215w',
+    name: '215W Rigid Solar Panel',
+    category: 'solar',
+    role: 'source',
+    icon: '☀️',
+    currentType: 'DC',
+    ratedWatts: 215,
+    price: 219,
     notes: 'Monocrystalline rigid panel.',
   },
   {
@@ -203,6 +230,22 @@ export const CATALOG: ComponentSpec[] = [
     efficiency: 0.94,
     price: 469,
     notes: 'Step-up DC-DC for charging a 48V house bank from a 12V starter alternator.',
+  },
+
+  {
+    id: 'balmar-170a',
+    name: 'Balmar 170A + Wakespeed WS500',
+    category: 'alternator',
+    role: 'source',
+    icon: '⚙️',
+    currentType: 'DC',
+    systemVoltage: 12,
+    outputVoltage: 12,
+    outputAmps: 150,
+    outputWatts: 1800,
+    efficiency: 0.92,
+    price: 999,
+    notes: 'High-output secondary alternator with Wakespeed smart regulator for lithium charging. Factory on Winnebago Ekko Sprinter.',
   },
 
   // ───────── CHARGE CONTROLLERS ─────────
@@ -333,6 +376,21 @@ export const CATALOG: ComponentSpec[] = [
     efficiency: 0.9,
     price: 449,
     notes: 'Standalone pure sine wave inverter.',
+  },
+
+  {
+    id: 'xantrex-freedom-xc-2000',
+    name: 'Xantrex Freedom XC 2000W',
+    category: 'inverter',
+    role: 'conversion',
+    icon: '🔁',
+    currentType: 'either',
+    systemVoltage: 12,
+    outputVoltage: 120,
+    outputWatts: 2000,
+    efficiency: 0.90,
+    price: 1099,
+    notes: '12V → 120VAC pure sine wave inverter with 80A shore charger (5–80A adjustable). Factory inverter/charger in Winnebago Ekko.',
   },
 
   // ───────── DC-DC CONVERTERS ─────────
